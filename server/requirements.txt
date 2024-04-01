@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+
+python-socketio
+python-jose
+passlib[bcrypt]
+uuid
+requests
