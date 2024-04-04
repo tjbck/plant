@@ -65,9 +65,19 @@ async def get_status():
     }
 
 
+def str_to_int(s):
+    try:
+        return int(s)
+    except ValueError:
+        print("Could not convert the string to an integer.")
+        return None
+
+
 @app.get("/payload")
 async def save_sensor_payload(id: str, sensor_type: str, value: str):
     print(id, sensor_type, value)
+
+    value = str_to_int(value)
 
     sensor_key = f"sensor:{id}"
     data = {
