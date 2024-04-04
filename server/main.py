@@ -9,7 +9,10 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from pydantic import BaseModel
 from typing import List
-from config import REDIS_CLIENT
+
+
+from utils import post_webhook
+from config import REDIS_CLIENT, DISCORD_WEBHOOK_URL
 
 
 class SPAStaticFiles(StaticFiles):
@@ -73,6 +76,9 @@ async def save_sensor_payload(id: str, sensor_type: str, value: str):
         "value": value,
         "timestamp": int(time.time()),
     }
+
+    if sensor_type == "temp" and value < 20:
+        post_webhook(DISCORD_WEBHOOK_URL, "Too cold...")
 
     REDIS_CLIENT.rpush(sensor_key, json.dumps(data))
     return {"status": True, "payload": data}
