@@ -1,19 +1,15 @@
 import time
-import os
-import sys
-import logging
-import requests
+import json
 
 from fastapi import FastAPI, Request, Depends, status
 from fastapi.staticfiles import StaticFiles
 from fastapi import HTTPException
-from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.middleware.base import BaseHTTPMiddleware
 
 from pydantic import BaseModel
 from typing import List
+from config import REDIS_CLIENT
 
 
 class SPAStaticFiles(StaticFiles):
@@ -59,8 +55,32 @@ async def get_status():
     }
 
 
-# app.mount(
-#     "/",
-#     SPAStaticFiles(directory=FRONTEND_BUILD_DIR, html=True),
-#     name="spa-static-files",
-# )
+@app.get("/")
+async def get_status():
+    return {
+        "status": True,
+    }
+
+
+@app.get("/payload")
+async def save_sensor_payload(id: str, sensor_type: str, value: str):
+    print(id, sensor_type, value)
+
+    sensor_key = f"sensor:{id}"
+    data = {
+        "id": id,
+        "sensor_type": sensor_type,
+        "value": value,
+        "timestamp": int(time.time()),
+    }
+
+    REDIS_CLIENT.rpush(sensor_key, json.dumps(data))
+    return {"status": True, "payload": data}
+
+
+@app.get("/logs/{id}")
+async def get_sensor_logs(id: str):
+
+    sensor_logs = REDIS_CLIENT.lrange(f"sensor:{id}", 0, -1)
+
+    return {"status": True, "data": [json.loads(log) for log in sensor_logs]}

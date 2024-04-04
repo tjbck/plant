@@ -8,3 +8,5 @@ python-jose
 passlib[bcrypt]
 uuid
 requests
+
+redis
