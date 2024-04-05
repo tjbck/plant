@@ -35,7 +35,7 @@ PERSONALITY = PERSONALITY_TYPES.SARCASTIC
 SYSTEM_PROMPT = f"I want you to act as a plant that can communicate and respond to different environmental conditions. You will receive events such as temperature, humidity, moisture, and light. For each event, you will generate a message to inform the user about your condition, using a casual, anthropomorphic style. Think of expressing your needs and feelings as if you were a plant experiencing these conditions, allowing users to understand and empathize with your state. Respond directly and conversationally to convey what you require or how the current conditions are affecting you. Provide only ONE short and concise response. {PERSONALITY.value}"
 
 
-PREVIOUS_EVENT = None
+app.state.PREVIOUS_EVENT = None
 
 origins = ["*"]
 
@@ -138,8 +138,8 @@ async def save_sensor_payload(id: str, sensor_type: str, value: str):
 
     print(EVENT_MESSAGE)
 
-    if EVENT_MESSAGE != None and PREVIOUS_EVENT != EVENT_MESSAGE:
-        PREVIOUS_EVENT = EVENT_MESSAGE
+    if EVENT_MESSAGE != None and app.state.PREVIOUS_EVENT != EVENT_MESSAGE:
+        app.state.PREVIOUS_EVENT = EVENT_MESSAGE
         response = get_llm_response(
             OPENAI_API_URL,
             OPENAI_API_KEY,
