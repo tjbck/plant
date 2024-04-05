@@ -149,8 +149,9 @@ async def save_sensor_payload(id: str, sensor_type: str, value: str):
             },
         )
 
-        print(response)
-        post_webhook(DISCORD_WEBHOOK_URL, response.strip().strip('"'))
+        if response:
+            print(response)
+            post_webhook(DISCORD_WEBHOOK_URL, response.strip().strip('"'))
 
     return {"status": True, "payload": data}
 
