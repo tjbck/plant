@@ -128,9 +128,9 @@ async def save_sensor_payload(id: str, sensor_type: str, value: str):
             EVENT_MESSAGE = PLANT_EVENTS.OVERWATERING.value
 
     elif sensor_type == "light":
-        if average_value < 0.1:
+        if average_value < 10:
             EVENT_MESSAGE = PLANT_EVENTS.LIGHT_INTENSITY_LOW.value
-        elif average_value > 0.8:
+        elif average_value > 80:
             EVENT_MESSAGE = PLANT_EVENTS.LIGHT_INTENSITY_HIGH.value
 
     print(EVENT_MESSAGE)
