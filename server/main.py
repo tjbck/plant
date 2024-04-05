@@ -1,12 +1,13 @@
-import time
-import json
-
 from fastapi import FastAPI, Request, Depends, status
 from fastapi.staticfiles import StaticFiles
 from fastapi import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+
+import time
+import json
+import numpy as np
 from pydantic import BaseModel
 from typing import List
 
@@ -103,29 +104,33 @@ async def save_sensor_payload(id: str, sensor_type: str, value: str):
 
     append_sensor_logs(id, sensor_type, data)
 
+    logs = get_sensor_logs(id, sensor_type)
+    last_10_log_values = [log["value"] for log in logs[-10:]]
+    average_value = np.mean(last_10_log_values)
+
     EVENT_MESSAGE = None
     if sensor_type == "temp":
-        if value < 16:
+        if average_value < 16:
             EVENT_MESSAGE = PLANT_EVENTS.COLD_TEMP.value
-        elif value > 30:
+        elif average_value > 30:
             EVENT_MESSAGE = PLANT_EVENTS.HOT_TEMP.value
 
     elif sensor_type == "humidity":
-        if value < 30:
+        if average_value < 30:
             EVENT_MESSAGE = PLANT_EVENTS.LOW_HUMIDITY.value
-        elif value > 80:
+        elif average_value > 80:
             EVENT_MESSAGE = PLANT_EVENTS.HIGH_HUMIDITY.value
 
     elif sensor_type == "moisture":
-        if value < 20:
+        if average_value < 20:
             EVENT_MESSAGE = PLANT_EVENTS.UNDERWATERING.value
-        elif value > 70:
+        elif average_value > 70:
             EVENT_MESSAGE = PLANT_EVENTS.OVERWATERING.value
 
     elif sensor_type == "light":
-        if value < 0.1:
+        if average_value < 0.1:
             EVENT_MESSAGE = PLANT_EVENTS.LIGHT_INTENSITY_LOW.value
-        elif value > 0.8:
+        elif average_value > 0.8:
             EVENT_MESSAGE = PLANT_EVENTS.LIGHT_INTENSITY_HIGH.value
 
     print(EVENT_MESSAGE)

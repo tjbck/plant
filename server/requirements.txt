@@ -10,3 +10,4 @@ uuid
 requests
 
 redis
+numpy
