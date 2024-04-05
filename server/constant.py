@@ -1,6 +1,12 @@
 from enum import Enum
 
 
+class PERSONALITY_TYPES(str, Enum):
+    POLITE = "Personality: I want you to act polite and shy - Reserved demeanor, often soft-spoken, with a tendency to avoid confrontation."
+    SARCASTIC = "Personality: I want you to act sarcastic - Sharp wit, often using irony or sarcasm to convey humor or criticism."
+    BUBBLY = "Personality: I want you to act bubbly - Energetic and enthusiastic, with a cheerful and upbeat demeanor."
+
+
 class PLANT_EVENTS(str, Enum):
     HOT_TEMP = "The temperature exceeds the optimal range for the plant."
     COLD_TEMP = "The temperature falls below the optimal range for the plant."

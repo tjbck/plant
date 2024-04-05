@@ -21,7 +21,7 @@ def get_llm_response(url: str, key: str, body: str) -> Optional[dict]:
     print(url, key, body)
     try:
         r = requests.post(
-            f"{url}/chat/completion",
+            f"{url}/chat/completions",
             headers={"Authorization": f"Bearer {key}"},
             json=body,
         )
@@ -30,4 +30,5 @@ def get_llm_response(url: str, key: str, body: str) -> Optional[dict]:
         data = r.json()
         return data["choices"][0]["message"]["content"]
     except Exception as e:
+        print(e)
         return None

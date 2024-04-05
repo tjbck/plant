@@ -12,7 +12,7 @@ from typing import List
 
 
 from utils import post_webhook, get_llm_response
-from constant import PLANT_EVENTS
+from constant import PLANT_EVENTS, PERSONALITY_TYPES
 
 from config import REDIS_CLIENT, DISCORD_WEBHOOK_URL, OPENAI_API_URL, OPENAI_API_KEY
 
@@ -30,6 +30,8 @@ class SPAStaticFiles(StaticFiles):
 
 app = FastAPI()
 
+PERSONALITY = PERSONALITY_TYPES.SARCASTIC
+SYSTEM_PROMPT = f"I want you to act as a plant that can communicate and respond to different environmental conditions. You will receive events such as temperature, humidity, moisture, and light. For each event, you will generate a message to inform the user about your condition, using a casual, anthropomorphic style. Think of expressing your needs and feelings as if you were a plant experiencing these conditions, allowing users to understand and empathize with your state. Respond directly and conversationally to convey what you require or how the current conditions are affecting you. Provide only ONE short and concise response. {PERSONALITY.value}"
 
 origins = ["*"]
 
@@ -104,27 +106,27 @@ async def save_sensor_payload(id: str, sensor_type: str, value: str):
     EVENT_MESSAGE = None
     if sensor_type == "temp":
         if value < 16:
-            EVENT_MESSAGE = PLANT_EVENTS.COLD_TEMP
+            EVENT_MESSAGE = PLANT_EVENTS.COLD_TEMP.value
         elif value > 30:
-            EVENT_MESSAGE = PLANT_EVENTS.HOT_TEMP
+            EVENT_MESSAGE = PLANT_EVENTS.HOT_TEMP.value
 
     elif sensor_type == "humidity":
         if value < 30:
-            EVENT_MESSAGE = PLANT_EVENTS.LOW_HUMIDITY
+            EVENT_MESSAGE = PLANT_EVENTS.LOW_HUMIDITY.value
         elif value > 80:
-            EVENT_MESSAGE = PLANT_EVENTS.HIGH_HUMIDITY
+            EVENT_MESSAGE = PLANT_EVENTS.HIGH_HUMIDITY.value
 
     elif sensor_type == "moisture":
         if value < 20:
-            EVENT_MESSAGE = PLANT_EVENTS.UNDERWATERING
+            EVENT_MESSAGE = PLANT_EVENTS.UNDERWATERING.value
         elif value > 70:
-            EVENT_MESSAGE = PLANT_EVENTS.OVERWATERING
+            EVENT_MESSAGE = PLANT_EVENTS.OVERWATERING.value
 
     elif sensor_type == "light":
         if value < 0.1:
-            EVENT_MESSAGE = PLANT_EVENTS.LIGHT_INTENSITY_LOW
+            EVENT_MESSAGE = PLANT_EVENTS.LIGHT_INTENSITY_LOW.value
         elif value > 0.8:
-            EVENT_MESSAGE = PLANT_EVENTS.LIGHT_INTENSITY_HIGH
+            EVENT_MESSAGE = PLANT_EVENTS.LIGHT_INTENSITY_HIGH.value
 
     print(EVENT_MESSAGE)
     if EVENT_MESSAGE != None:
@@ -136,11 +138,11 @@ async def save_sensor_payload(id: str, sensor_type: str, value: str):
                 "messages": [
                     {
                         "role": "system",
-                        "content": "I want you to act as a plant that can communicate and respond to different environmental conditions. You will receive events such as HOT_TEMP, COLD_TEMP, LOW_HUMIDITY, HIGH_HUMIDITY, OVERWATERING, UNDERWATERING, LIGHT_INTENSITY_LOW, and LIGHT_INTENSITY_HIGH. For each event, you will generate a message to inform the user about your condition, using a casual, anthropomorphic style. Think of expressing your needs and feelings as if you were a plant experiencing these conditions, allowing users to understand and empathize with your state. Respond directly and conversationally to convey what you require or how the current conditions are affecting you. Provide only ONE short and concise response.",
+                        "content": SYSTEM_PROMPT,
                     },
                     {
                         "role": "user",
-                        "content": EVENT_MESSAGE,
+                        "content": f"Sensor Type: {sensor_type}, Value: {value}, Message: {EVENT_MESSAGE}",
                     },
                 ],
                 "stream": False,
@@ -148,7 +150,7 @@ async def save_sensor_payload(id: str, sensor_type: str, value: str):
         )
 
         print(response)
-        post_webhook(DISCORD_WEBHOOK_URL, response)
+        post_webhook(DISCORD_WEBHOOK_URL, response.strip().strip('"'))
 
     return {"status": True, "payload": data}
 
