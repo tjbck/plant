@@ -126,6 +126,7 @@ async def save_sensor_payload(id: str, sensor_type: str, value: str):
         elif value > 0.8:
             EVENT_MESSAGE = PLANT_EVENTS.LIGHT_INTENSITY_HIGH
 
+    print(EVENT_MESSAGE)
     if EVENT_MESSAGE != None:
         response = get_llm_response(
             OPENAI_API_URL,
@@ -145,6 +146,8 @@ async def save_sensor_payload(id: str, sensor_type: str, value: str):
                 "stream": False,
             },
         )
+
+        print(response)
         post_webhook(DISCORD_WEBHOOK_URL, response)
 
     return {"status": True, "payload": data}

@@ -7,6 +7,8 @@ def post_webhook(url: str, message: str) -> bool:
         payload = {}
         payload["content"] = message
 
+        print(payload)
+
         r = requests.post(url, json=payload)
         r.raise_for_status()
         return True
@@ -16,9 +18,10 @@ def post_webhook(url: str, message: str) -> bool:
 
 
 def get_llm_response(url: str, key: str, body: str) -> Optional[dict]:
+    print(url, key, body)
     try:
         r = requests.post(
-            f"{url}/v1/chat/completion",
+            f"{url}/chat/completion",
             headers={"Authorization": f"Bearer {key}"},
             json=body,
         )
