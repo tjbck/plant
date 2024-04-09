@@ -8,6 +8,8 @@ const {
   ChannelType,
 } = require("discord.js");
 
+const { getResponse } = require("./utils");
+
 require("dotenv").config();
 console.log(process.env);
 
@@ -35,19 +37,40 @@ client.once(Events.ClientReady, (readyClient) => {
     if (message.channel.type === ChannelType.DM) {
       console.log(`[Incoming DM] ${message.content}`);
 
+      message.channel.sendTyping();
+
       // Fetch the last 10 messages from the DM channel
+      let messages = [];
+
       try {
-        const messages = await message.channel.messages.fetch({ limit: 10 });
+        const messageHistory = await message.channel.messages.fetch({
+          limit: 10,
+        });
         console.log("Previous 10 messages in the DM:");
-        messages.forEach((msg) =>
-          console.log(`[${msg.createdAt}] ${msg.author.tag}: ${msg.content}`)
-        );
+        messageHistory.forEach((msg) => {
+          console.log(`[${msg.createdAt}] ${msg.author.tag}: ${msg.content}`);
+          messages = [
+            {
+              role: msg.author.bot ? "assistant" : "user",
+              content: msg.content,
+            },
+            ...messages,
+          ];
+        });
+
+        console.log(messages);
       } catch (error) {
         console.error("Failed to fetch messages:", error);
       }
 
-      console.log(message.author);
-      message.author.send("HI");
+      const response = await getResponse(messages).catch((error) => {
+        console.log(error);
+        return null;
+      });
+
+      if (response !== null) {
+        message.author.send(response);
+      }
     }
   });
 

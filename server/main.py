@@ -170,3 +170,35 @@ async def save_sensor_payload(id: str, sensor_type: str, value: str):
 async def get_logs(id: str, sensor_type: str):
     sensor_logs = REDIS_CLIENT.lrange(f"sensor:{id}:{sensor_type}", 0, -1)
     return {"status": True, "data": [json.loads(log) for log in sensor_logs]}
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatMessagesForm(BaseModel):
+    messages: List[ChatMessage]
+
+
+@app.post("/chat")
+async def chat(form_data: ChatMessagesForm):
+    response = get_llm_response(
+        OPENAI_API_URL,
+        OPENAI_API_KEY,
+        {
+            "model": "mistral:latest",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": f"Imagine yourself as a talking plant, communicating your needs and feelings in response to user inquiries. Express your conditions as if you were experiencing them, helping users to empathize with your state. Provide a single, concise, and direct reply that conveys exactly what you need or how your environment is impacting you. {PERSONALITY.value}",
+                },
+                *form_data.model_dump()["messages"],
+            ],
+            "stream": False,
+        },
+    )
+
+    response = response.strip().strip('"')
+    print(response)
+    return {"status": True, "response": response}
