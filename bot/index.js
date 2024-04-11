@@ -85,6 +85,13 @@ client.once(Events.ClientReady, (readyClient) => {
     reply.send({ status: true });
   });
 
+  fastify.post("/id/:userId", async (request, reply) => {
+    const { userId } = request.params;
+    console.log(request.body);
+    client.users.send(userId, request.body.content);
+    reply.send({ status: true });
+  });
+
   fastify.get("/id/:userId/delete", async (request, reply) => {
     const { userId } = request.params;
 

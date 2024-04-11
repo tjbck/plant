@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from typing import List
 
 
-from utils import post_webhook, get_llm_response
+from utils import post_webhook, sent_bot_message, get_llm_response
 from constant import PLANT_EVENTS, PERSONALITY_TYPES
 
 from config import (
@@ -178,6 +178,81 @@ async def get_logs(id: str, sensor_type: str):
     return {"status": True, "data": [json.loads(log) for log in sensor_logs]}
 
 
+class EventForm(BaseModel):
+    user_id: str
+    event: str
+
+
+@app.post("/event")
+async def set_event(form_data: EventForm):
+
+    try:
+        EVENT_MESSAGE = PLANT_EVENTS[form_data.event].value
+
+        sensor_type = None
+        sensor_value = None
+
+        if EVENT_MESSAGE == PLANT_EVENTS.COLD_TEMP.value:
+            sensor_type = "temp"
+            sensor_value = 15
+        elif EVENT_MESSAGE == PLANT_EVENTS.HOT_TEMP.value:
+            sensor_type = "temp"
+            sensor_value = 31
+        elif EVENT_MESSAGE == PLANT_EVENTS.LOW_HUMIDITY.value:
+            sensor_type = "humidity"
+            sensor_value = 20
+        elif EVENT_MESSAGE == PLANT_EVENTS.HIGH_HUMIDITY.value:
+            sensor_type = "humidity"
+            sensor_value = 81
+        elif EVENT_MESSAGE == PLANT_EVENTS.UNDERWATERING.value:
+            sensor_type = "humidity"
+            sensor_value = 15
+        elif EVENT_MESSAGE == PLANT_EVENTS.OVERWATERING.value:
+            sensor_type = "humidity"
+            sensor_value = 81
+        elif EVENT_MESSAGE == PLANT_EVENTS.LIGHT_INTENSITY_LOW.value:
+            sensor_type = "light"
+            sensor_value = 5
+        elif EVENT_MESSAGE == PLANT_EVENTS.LIGHT_INTENSITY_HIGH.value:
+            sensor_type = "light"
+            sensor_value = 90
+
+        print(EVENT_MESSAGE)
+
+        if EVENT_MESSAGE != None:
+            app.state.PREVIOUS_EVENT = EVENT_MESSAGE
+            response = get_llm_response(
+                OPENAI_API_URL,
+                OPENAI_API_KEY,
+                {
+                    "model": MODEL,
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": SYSTEM_PROMPT,
+                        },
+                        {
+                            "role": "user",
+                            "content": f"Sensor Type: {sensor_type}, Value: {sensor_value}, Message: {EVENT_MESSAGE}",
+                        },
+                    ],
+                    "stream": False,
+                },
+            )
+
+            if response:
+                print(response)
+                sent_bot_message(form_data.user_id, response.strip().strip('"'))
+
+        return {"status": True, "event": EVENT_MESSAGE}
+    except Exception as e:
+        print(e)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Something went wrong :/",
+        )
+
+
 class ChatMessage(BaseModel):
     role: str
     content: str
@@ -193,7 +268,7 @@ async def chat(form_data: ChatMessagesForm):
     messages = [
         {
             "role": "system",
-            "content": f"You are a sentient plant. Express your needs and feelings in one short, concise sentence to help users empathize with your condition. Current State: {app.state.PREVIOUS_EVENT}\n{PERSONALITY.value if app.state.PREVIOUS_EVENT != PLANT_EVENTS.NORMAL.value else 'I am thriving and happy!'}",
+            "content": f"You are a sentient plant. Express your needs and feelings in one short, concise sentence to help users empathize with your condition. Current State: {app.state.PREVIOUS_EVENT}\n{PERSONALITY.value if app.state.PREVIOUS_EVENT != PLANT_EVENTS.NORMAL.value else 'I am thriving and happy! 🥰'}",
         },
         *form_data.model_dump()["messages"],
     ]
