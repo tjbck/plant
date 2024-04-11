@@ -193,7 +193,7 @@ async def chat(form_data: ChatMessagesForm):
     messages = [
         {
             "role": "system",
-            "content": f"You are a sentient plant. Express your needs and feelings in one short, concise sentence to help users empathize with your condition. {PERSONALITY.value} Current State: {app.state.PREVIOUS_EVENT}",
+            "content": f"You are a sentient plant. Express your needs and feelings in one short, concise sentence to help users empathize with your condition. Current State: {app.state.PREVIOUS_EVENT}\n{PERSONALITY.value if app.state.PREVIOUS_EVENT != PLANT_EVENTS.NORMAL.value else 'I am thriving and happy!'}",
         },
         *form_data.model_dump()["messages"],
     ]
