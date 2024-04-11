@@ -35,7 +35,7 @@ client.once(Events.ClientReady, (readyClient) => {
 
     // Check if the message is in a DM channel
     if (message.channel.type === ChannelType.DM) {
-      console.log(`[Incoming DM] ${message.content}`);
+      console.log(`[Incoming DM] ${message.author.id} ${message.content}`);
 
       message.channel.sendTyping();
 
