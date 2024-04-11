@@ -19,3 +19,4 @@ DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL", "")
 
 OPENAI_API_URL = os.getenv("OPENAI_API_URL", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+MODEL = os.getenv("MODEL", "mistral:latest")

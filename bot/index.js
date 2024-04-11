@@ -44,7 +44,7 @@ client.once(Events.ClientReady, (readyClient) => {
 
       try {
         const messageHistory = await message.channel.messages.fetch({
-          limit: 10,
+          limit: 6,
         });
         console.log("Previous 10 messages in the DM:");
         messageHistory.forEach((msg) => {

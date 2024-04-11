@@ -8,6 +8,7 @@ class PERSONALITY_TYPES(str, Enum):
 
 
 class PLANT_EVENTS(str, Enum):
+    NORMAL = "The plant is thriving and happy."
     HOT_TEMP = "The temperature exceeds the optimal range for the plant."
     COLD_TEMP = "The temperature falls below the optimal range for the plant."
     LOW_HUMIDITY = "Humidity levels are too low for the plant."

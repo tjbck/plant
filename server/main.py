@@ -15,7 +15,13 @@ from typing import List
 from utils import post_webhook, get_llm_response
 from constant import PLANT_EVENTS, PERSONALITY_TYPES
 
-from config import REDIS_CLIENT, DISCORD_WEBHOOK_URL, OPENAI_API_URL, OPENAI_API_KEY
+from config import (
+    REDIS_CLIENT,
+    DISCORD_WEBHOOK_URL,
+    OPENAI_API_URL,
+    OPENAI_API_KEY,
+    MODEL,
+)
 
 
 class SPAStaticFiles(StaticFiles):
@@ -35,7 +41,7 @@ PERSONALITY = PERSONALITY_TYPES.SARCASTIC
 SYSTEM_PROMPT = f"I want you to act as a plant that can communicate and respond to different environmental conditions. You will receive events such as temperature, humidity, moisture, and light. For each event, you will generate a message to inform the user about your condition, using a casual, anthropomorphic style. Think of expressing your needs and feelings as if you were a plant experiencing these conditions, allowing users to understand and empathize with your state. Respond directly and conversationally to convey what you require or how the current conditions are affecting you. Provide only ONE short and concise response. {PERSONALITY.value}"
 
 
-app.state.PREVIOUS_EVENT = None
+app.state.PREVIOUS_EVENT = PLANT_EVENTS.NORMAL.value
 
 origins = ["*"]
 
@@ -144,7 +150,7 @@ async def save_sensor_payload(id: str, sensor_type: str, value: str):
             OPENAI_API_URL,
             OPENAI_API_KEY,
             {
-                "model": "mistral:latest",
+                "model": MODEL,
                 "messages": [
                     {
                         "role": "system",
@@ -183,22 +189,26 @@ class ChatMessagesForm(BaseModel):
 
 @app.post("/chat")
 async def chat(form_data: ChatMessagesForm):
+
+    messages = [
+        {
+            "role": "system",
+            "content": f"You are a sentient plant. Express your needs and feelings in one short, concise sentence to help users empathize with your condition. {PERSONALITY.value} Current State: {app.state.PREVIOUS_EVENT}",
+        },
+        *form_data.model_dump()["messages"],
+    ]
+
+    print(messages)
     response = get_llm_response(
         OPENAI_API_URL,
         OPENAI_API_KEY,
         {
-            "model": "mistral:latest",
-            "messages": [
-                {
-                    "role": "system",
-                    "content": f"Imagine yourself as a talking plant, communicating your needs and feelings in response to user inquiries. Express your conditions as if you were experiencing them, helping users to empathize with your state. Provide a single, concise, and direct reply that conveys exactly what you need or how your environment is impacting you. {PERSONALITY.value}",
-                },
-                *form_data.model_dump()["messages"],
-            ],
+            "model": MODEL,
+            "messages": messages,
             "stream": False,
         },
     )
 
-    response = response.strip().strip('"')
+    response = response.strip()
     print(response)
     return {"status": True, "response": response}
